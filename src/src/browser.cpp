@@ -174,6 +174,15 @@ void BrowserPrivate::onMessageReceived(const Message &message)
 
 void BrowserPrivate::onShouldQuery(const Record &record)
 {
+#if 1
+    // Moonlight: Never query for expiring DNS records. This action effectively
+    // results in amplification of mDNS traffic by retransmitting queries
+    // sent by all devices on the network, because we snoop on all other mDNS traffic
+    // and populate our cache with it. This breaks accurately reporting serviceRemoved()
+    // events since we don't keep those records up to date, however Moonlight doesn't
+    // use that signal.
+    Q_UNUSED(record);
+#else
     // Assume that all messages in the cache are still in use (by the browser)
     // and attempt to renew them immediately
 
@@ -183,6 +192,7 @@ void BrowserPrivate::onShouldQuery(const Record &record)
     Message message;
     message.addQuery(query);
     server->sendMessageToAll(message);
+#endif
 }
 
 void BrowserPrivate::onRecordExpired(const Record &record)
